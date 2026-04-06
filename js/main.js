@@ -402,7 +402,7 @@
   });
 
   const BTN_RADIUS = 300; // px — effect radius around each button
-  const inlineCubeBox = document.getElementById('inlineCubeBox');
+  const inlineCubeBoxes = document.querySelectorAll('.inline-cube__box');
 
   function updateBtnRotations() {
     revealBtns.forEach(btn => {
@@ -419,13 +419,13 @@
       btn.style.setProperty('--ry', ry + 'deg');
     });
 
-    // Inline cube — global mouse direction tracking (no distance falloff)
-    if (inlineCubeBox) {
-      const mx = (btnMouseX / window.innerWidth - 0.5) * 2;
-      const my = (btnMouseY / window.innerHeight - 0.5) * 2;
-      inlineCubeBox.style.setProperty('--irx', (my * -35) + 'deg');
-      inlineCubeBox.style.setProperty('--iry', (mx * 35) + 'deg');
-    }
+    // All inline cubes — global mouse direction tracking
+    const mx = (btnMouseX / window.innerWidth - 0.5) * 2;
+    const my = (btnMouseY / window.innerHeight - 0.5) * 2;
+    inlineCubeBoxes.forEach(box => {
+      box.style.setProperty('--irx', (my * -35) + 'deg');
+      box.style.setProperty('--iry', (mx * 35) + 'deg');
+    });
 
     requestAnimationFrame(updateBtnRotations);
   }
