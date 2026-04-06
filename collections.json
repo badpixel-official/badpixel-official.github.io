@@ -12,6 +12,11 @@
         { "name": "널 (2)", "image": "assets/images/product/q1/null1.png" },
         { "name": "비카 (2)", "image": "assets/images/product/q1/vica1.png" },
         { "name": "널 (3)", "image": "assets/images/product/q1/null1.png" }
+      ],
+      "lookbook": [
+        { "name": "LOOK 01", "image": "assets/images/product/q1/null1.png" },
+        { "name": "LOOK 02", "image": "assets/images/product/q1/vica1.png" },
+        { "name": "LOOK 03", "image": "assets/images/product/q1/null1.png" }
       ]
     },
     {
@@ -23,7 +28,8 @@
       "products": [
         { "name": "5-1", "image": "assets/images/product/q2/5-1.png" },
         { "name": "1-1", "image": "assets/images/product/q2/1-1.png" }
-      ]
+      ],
+      "lookbook": []
     }
   ]
 }

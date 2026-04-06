@@ -225,16 +225,31 @@
     content.classList.toggle('is-open', isOpen);
   });
 
-  /* --- Tab switching (event delegation — works for dynamic tabs too) --- */
+  /* --- Tab switching (event delegation — scoped to paired tab-content) --- */
   document.addEventListener('click', (e) => {
     const tab = e.target.closest('.section-tab');
     if (!tab) return;
     e.stopPropagation();
     const target = tab.dataset.tab;
-    const parent = tab.closest('.section__center') || document;
-    parent.querySelectorAll('.section-tab').forEach(t => t.classList.remove('is-open'));
+    const tabGroup = tab.closest('.section-tabs');
+    if (!tabGroup) return;
+
+    // Toggle only tabs in the same tab group
+    tabGroup.querySelectorAll('.section-tab').forEach(t => t.classList.remove('is-open'));
     tab.classList.add('is-open');
-    parent.querySelectorAll('.tab-content').forEach(c => c.classList.add('is-hidden'));
+
+    // Find the paired content container (next sibling, or child container)
+    // Collect all tab IDs in this group to find matching tab-content elements
+    const tabIds = [];
+    tabGroup.querySelectorAll('.section-tab').forEach(t => {
+      if (t.dataset.tab) tabIds.push('tab-' + t.dataset.tab);
+    });
+
+    // Hide all matching, show the target
+    tabIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('is-hidden');
+    });
     const content = document.getElementById('tab-' + target);
     if (content) content.classList.remove('is-hidden');
   });
@@ -247,13 +262,13 @@
       const contentsEl = document.getElementById('productContents');
       if (!tabsEl || !contentsEl) return;
 
-      data.collections.forEach((col, i) => {
-        const tab = document.createElement('button');
+      data.collections.forEach(function(col, i) {
+        // Collection tab
+        var tab = document.createElement('button');
         tab.className = 'section-tab reveal-trigger' + (i === 0 ? ' is-open' : '');
         tab.dataset.tab = 'col-' + col.id;
         if (col.soon) {
-          // Extract "26 피어싱 Collection" → "26 " + mosaic("피어싱") + " Collection"
-          const parts = col.name.match(/^(.*?\s)(\S+)(\s.*)$/);
+          var parts = col.name.match(/^(.*?\s)(\S+)(\s.*)$/);
           if (parts) {
             tab.innerHTML = parts[1] + '<span class="mosaic-text">' + parts[2] + '</span>' + parts[3] + ' (Soon)';
           } else {
@@ -264,39 +279,70 @@
         }
         tabsEl.appendChild(tab);
 
-        const content = document.createElement('div');
+        // Collection content
+        var content = document.createElement('div');
         content.className = 'tab-content' + (i > 0 ? ' is-hidden' : '');
         content.id = 'tab-col-' + col.id;
 
         if (col.soon) {
           content.innerHTML = '<p class="product__soon">Coming Soon</p>';
         } else {
-          // Culture title pill (main title, click to reveal carousel)
-          var cultureRevealId = 'col-' + col.id + '-reveal';
+          // 1. Culture pill
+          var revealId = 'col-' + col.id + '-reveal';
           var titleWrap = document.createElement('div');
           titleWrap.className = 'product__title-wrap';
           titleWrap.innerHTML =
-            '<span class="reveal-trigger product__culture-title" data-reveal="' + cultureRevealId + '" role="button" tabindex="0">' + col.culture + '</span>';
+            '<span class="reveal-trigger product__culture-title" data-reveal="' + revealId + '" role="button" tabindex="0">' + col.culture + '</span>';
           content.appendChild(titleWrap);
 
-          // Center-focus carousel (starts blurred, revealed on pill click)
-          var carouselId = 'carousel-' + col.id;
-          var carousel = document.createElement('div');
-          carousel.className = 'product__carousel product__carousel--locked';
-          carousel.id = cultureRevealId;
-          const track = document.createElement('div');
-          track.className = 'product__carousel-track';
-          track.id = carouselId;
+          // 2. Blur area (revealed on culture pill click)
+          var blurArea = document.createElement('div');
+          blurArea.className = 'product__carousel product__carousel--locked';
+          blurArea.id = revealId;
 
-          col.products.forEach((p, pi) => {
-            const slide = document.createElement('div');
-            slide.className = 'product__slide';
-            slide.dataset.index = pi;
-            slide.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy"><p>' + p.name + '</p>';
-            track.appendChild(slide);
+          // 2a. Product / Data Vault view tabs
+          var viewTabs = document.createElement('div');
+          viewTabs.className = 'section-tabs';
+          viewTabs.innerHTML =
+            '<button class="section-tab reveal-trigger is-open" data-tab="pv-' + col.id + '">Product</button>' +
+            '<button class="section-tab reveal-trigger" data-tab="dv-' + col.id + '">Data Vault</button>';
+          blurArea.appendChild(viewTabs);
+
+          // 2b. Product gallery
+          var pvContent = document.createElement('div');
+          pvContent.className = 'tab-content';
+          pvContent.id = 'tab-pv-' + col.id;
+          var pvTrack = document.createElement('div');
+          pvTrack.className = 'product__carousel-track';
+          col.products.forEach(function(p) {
+            var card = document.createElement('div');
+            card.className = 'product__slide';
+            card.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy"><p>' + p.name + '</p>';
+            pvTrack.appendChild(card);
           });
-          carousel.appendChild(track);
-          content.appendChild(carousel);
+          pvContent.appendChild(pvTrack);
+          blurArea.appendChild(pvContent);
+
+          // 2c. Data Vault gallery
+          var dvContent = document.createElement('div');
+          dvContent.className = 'tab-content is-hidden';
+          dvContent.id = 'tab-dv-' + col.id;
+          if (col.lookbook && col.lookbook.length > 0) {
+            var dvTrack = document.createElement('div');
+            dvTrack.className = 'product__carousel-track';
+            col.lookbook.forEach(function(p) {
+              var card = document.createElement('div');
+              card.className = 'product__slide';
+              card.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy"><p>' + p.name + '</p>';
+              dvTrack.appendChild(card);
+            });
+            dvContent.appendChild(dvTrack);
+          } else {
+            dvContent.innerHTML = '<p class="product__soon">Coming Soon</p>';
+          }
+          blurArea.appendChild(dvContent);
+
+          content.appendChild(blurArea);
         }
 
         contentsEl.appendChild(content);
@@ -305,22 +351,42 @@
     .catch(() => {});
 
   /* --- Drag-to-scroll for horizontal galleries --- */
+  let dragActive = false;
+  let dragCleanup = null;
+
   document.addEventListener('mousedown', (e) => {
     const track = e.target.closest('.product__carousel-track');
     if (!track) return;
-    e.preventDefault();
+    // Only activate if track is in the currently active section
+    const section = track.closest('.section');
+    if (!section || !section.classList.contains('active')) return;
     let startX = e.clientX;
     let scrollLeft = track.scrollLeft;
+    let moved = false;
+    dragActive = true;
+
     function onMove(ev) {
+      moved = true;
       track.scrollLeft = scrollLeft - (ev.clientX - startX);
     }
     function onUp() {
+      dragActive = false;
+      dragCleanup = null;
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
     }
+
+    dragCleanup = onUp;
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   });
+
+  // Force cleanup on section transition
+  const origGoToSection = goToSection;
+  goToSection = function(index) {
+    if (dragCleanup) { dragCleanup(); }
+    return origGoToSection(index);
+  };
 
   /* --- Init --- */
   updateUIVisibility();
