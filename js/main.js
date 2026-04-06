@@ -1,0 +1,315 @@
+/* ========================================
+   BADPIXEL — Fullpage Presentation v16
+   Intro (pixel) + sections (no sub-slides)
+   Blur overlay + ScrambleText transitions
+   ======================================== */
+
+(function() {
+  const sections = document.querySelectorAll('.section');
+  const sideNav = document.getElementById('sideNav');
+  const sideNavBtns = document.querySelectorAll('.side-nav__btn');
+  const glitchOverlay = document.getElementById('glitchOverlay');
+  const totalSections = sections.length;
+
+  const INTRO = 0; // Pixel only
+
+  let currentSection = 0;
+  let isTransitioning = false;
+
+  /* ================================================
+     ScrambleText
+     ================================================ */
+  const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?<>{}[]';
+
+  function scrambleText(element, duration) {
+    const original = element.textContent;
+    const len = original.length;
+    if (len === 0) return;
+
+    const resolved = new Array(len).fill(false);
+    const startTime = performance.now();
+    const resolveDelay = duration * 0.3;
+
+    function frame() {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      let result = '';
+      for (let i = 0; i < len; i++) {
+        if (original[i] === ' ' || original[i] === '\n') {
+          result += original[i];
+          continue;
+        }
+        const charProgress = (elapsed - resolveDelay) / (duration - resolveDelay);
+        if (charProgress > i / len) resolved[i] = true;
+
+        result += resolved[i]
+          ? original[i]
+          : SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+      }
+      element.textContent = result;
+
+      if (progress < 1) requestAnimationFrame(frame);
+      else element.textContent = original;
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function scrambleSection(section) {
+    const targets = section.querySelectorAll(
+      '.section__title, .hero__title, .hero__tagline, .hero__sub, .label, .section__body, h3, p, blockquote, span:not(.section__scroll-bar)'
+    );
+    targets.forEach((el, i) => {
+      // Skip elements that contain reveal triggers (scramble destroys child elements)
+      if (el.querySelector('.reveal-trigger, .reveal-content')) return;
+      setTimeout(() => scrambleText(el, 600), i * 80);
+    });
+  }
+
+  /* ================================================
+     [B+CRT] Fade + CRT subpixel + wave
+     ================================================ */
+  function glitchTransition(onSwitch) {
+    return new Promise((resolve) => {
+      const pixelEl = document.getElementById('pixel');
+      const viewport = document.getElementById('viewport');
+      if (pixelEl) pixelEl.style.opacity = '0';
+      document.body.classList.add('is-transitioning');
+
+      const oldSection = sections[currentSection];
+
+      // Activate CRT overlay
+      glitchOverlay.classList.add('is-active');
+
+      // Phase 1: fade out current section
+      oldSection.classList.add('is-fading-out');
+
+      // Wave animation during transition
+      const startTime = performance.now();
+      const DURATION = 950;
+      let waveRaf;
+
+      function waveLoop() {
+        const elapsed = performance.now() - startTime;
+        const progress = elapsed / DURATION;
+        if (progress >= 1) {
+          if (viewport) viewport.style.transform = '';
+          return;
+        }
+        const intensity = Math.sin(progress * Math.PI);
+        if (viewport) {
+          const wave = Math.sin(elapsed * 0.02) * 6 * intensity;
+          viewport.style.transform = 'translateY(' + wave + 'px)';
+        }
+        waveRaf = requestAnimationFrame(waveLoop);
+      }
+      waveRaf = requestAnimationFrame(waveLoop);
+
+      setTimeout(() => {
+        // Phase 2: switch sections
+        oldSection.classList.remove('is-fading-out');
+        onSwitch();
+
+        const newSection = sections[currentSection];
+        newSection.classList.add('is-fading-in');
+
+        // Phase 3: fade in new section
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            newSection.classList.add('is-visible');
+          });
+        });
+
+        // Cleanup
+        setTimeout(() => {
+          newSection.classList.remove('is-fading-in', 'is-visible');
+          glitchOverlay.classList.remove('is-active');
+          document.body.classList.remove('is-transitioning');
+          if (viewport) viewport.style.transform = '';
+          if (pixelEl) pixelEl.style.opacity = '1';
+          cancelAnimationFrame(waveRaf);
+          resolve();
+        }, 600);
+      }, 350);
+    });
+  }
+
+  /* --- Section transition --- */
+  async function goToSection(index) {
+    if (index < 0 || index >= totalSections || index === currentSection || isTransitioning) return;
+    isTransitioning = true;
+
+    await glitchTransition(() => {
+      sections[currentSection].classList.remove('active');
+      sections[index].classList.add('active');
+      currentSection = index;
+
+      updateUIVisibility();
+      updateNavActive();
+
+      if (index !== INTRO) {
+        scrambleSection(sections[index]);
+      }
+    });
+
+    isTransitioning = false;
+  }
+
+  /* --- UI --- */
+  const scrollHint = document.querySelector('.section__scroll-hint');
+
+  function updateNavActive() {
+    sideNavBtns.forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.goto) === currentSection);
+    });
+  }
+
+  function updateUIVisibility() {
+    const isIntro = (currentSection === INTRO);
+    if (scrollHint) scrollHint.style.opacity = isIntro ? '1' : '0';
+  }
+
+  /* --- Wheel --- */
+  let wheelCooldown = false;
+  document.addEventListener('wheel', (e) => {
+    if (wheelCooldown || isTransitioning) return;
+    wheelCooldown = true;
+
+    const down = e.deltaY > 0;
+    if (down) goToSection(currentSection + 1);
+    else goToSection(currentSection - 1);
+
+    setTimeout(() => { wheelCooldown = false; }, 1200);
+  }, { passive: true });
+
+  /* --- Touch --- */
+  let touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    const diff = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(diff) < 50) return;
+    goToSection(diff > 0 ? currentSection + 1 : currentSection - 1);
+  }, { passive: true });
+
+  /* --- Keyboard --- */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+      e.preventDefault();
+      goToSection(currentSection + 1);
+    } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault();
+      goToSection(currentSection - 1);
+    }
+  });
+
+  /* --- Side nav --- */
+  sideNavBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      goToSection(parseInt(btn.dataset.goto));
+    });
+  });
+
+  /* --- Reveal triggers (ped.ro style collapsible) --- */
+  document.querySelectorAll('.reveal-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = btn.dataset.reveal;
+      const content = document.getElementById(targetId);
+      if (!content) return;
+
+      const isOpen = btn.classList.toggle('is-open');
+      content.classList.toggle('is-open', isOpen);
+    });
+  });
+
+  /* --- Init --- */
+  updateUIVisibility();
+
+  /* --- Glitch bursts --- */
+  const glitchEl = document.querySelector('.glitch');
+  if (glitchEl) {
+    const colors = ['rgba(255,32,32,0.8)', 'rgba(0,255,65,0.6)', 'rgba(0,102,255,0.7)'];
+    (function loop() {
+      const rx = (Math.random() - 0.5) * 16;
+      const ry = (Math.random() - 0.5) * 8;
+      const c1 = colors[Math.floor(Math.random() * 3)];
+      const c2 = colors[Math.floor(Math.random() * 3)];
+      glitchEl.style.textShadow = `${rx}px ${ry}px 0 ${c1}, ${-rx}px ${-ry}px 0 ${c2}`;
+      setTimeout(() => { glitchEl.style.textShadow = ''; }, 100 + Math.random() * 80);
+      setTimeout(loop, 1000 + Math.random() * 2000);
+    })();
+  }
+
+  /* --- 3D Pixel: Mouse tracking + cursor mode --- */
+  const pixelCube = document.getElementById('pixelCube');
+  const pixelEl = document.getElementById('pixel');
+  if (pixelCube && pixelEl) {
+    let targetRx = 0, targetRy = 0;
+    let currentRx = 0, currentRy = 0;
+    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+    let rafId = null;
+    let lastMouseTime = Date.now();
+    let idleAngle = 0;
+    let isCursorMode = false;
+    const isTouchDevice = 'ontouchstart' in window;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      const mx = (e.clientX / window.innerWidth - 0.5) * 2;
+      const my = (e.clientY / window.innerHeight - 0.5) * 2;
+      targetRx = my * -45;
+      targetRy = mx * 45;
+      lastMouseTime = Date.now();
+    });
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function animate() {
+      const idle = isTouchDevice || (Date.now() - lastMouseTime > 3000);
+
+      if (idle && !isCursorMode) {
+        idleAngle += 0.15;
+        targetRx = Math.sin(idleAngle * 0.02) * 15;
+        targetRy = Math.sin(idleAngle * 0.01) * 30;
+      }
+
+      currentRx = lerp(currentRx, targetRx, 0.08);
+      currentRy = lerp(currentRy, targetRy, 0.08);
+
+      pixelCube.style.setProperty('--rx', currentRx + 'deg');
+      pixelCube.style.setProperty('--ry', currentRy + 'deg');
+
+      if (isCursorMode) {
+        pixelEl.style.left = mouseX + 'px';
+        pixelEl.style.top = mouseY + 'px';
+      }
+
+      rafId = requestAnimationFrame(animate);
+    }
+
+    function setCursorMode(on) {
+      isCursorMode = on;
+      pixelEl.classList.toggle('pixel--cursor', on);
+      document.body.classList.toggle('cursor-active', on);
+      if (!on) {
+        pixelEl.style.left = '50%';
+        pixelEl.style.top = '50%';
+      }
+    }
+
+    // Hook into section navigation
+    const origUpdateUI = updateUIVisibility;
+    updateUIVisibility = function() {
+      origUpdateUI();
+      setCursorMode(currentSection !== INTRO);
+    };
+
+    // Always run animation
+    rafId = requestAnimationFrame(animate);
+  }
+
+})();
