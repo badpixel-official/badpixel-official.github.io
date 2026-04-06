@@ -61,7 +61,7 @@
     );
     targets.forEach((el, i) => {
       // Skip elements that contain reveal triggers (scramble destroys child elements)
-      if (el.querySelector('.reveal-trigger, .reveal-content')) return;
+      if (el.querySelector('.reveal-trigger, .reveal-content, .inline-cube')) return;
       setTimeout(() => scrambleText(el, 600), i * 80);
     });
   }
@@ -212,21 +212,158 @@
     });
   });
 
-  /* --- Reveal triggers (ped.ro style collapsible) --- */
-  document.querySelectorAll('.reveal-trigger').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const targetId = btn.dataset.reveal;
-      const content = document.getElementById(targetId);
-      if (!content) return;
+  /* --- Reveal triggers (event delegation — works for dynamic elements too) --- */
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.reveal-trigger:not(.section-tab)');
+    if (!btn) return;
+    e.stopPropagation();
+    const targetId = btn.dataset.reveal;
+    const content = document.getElementById(targetId);
+    if (!content) return;
 
-      const isOpen = btn.classList.toggle('is-open');
-      content.classList.toggle('is-open', isOpen);
-    });
+    const isOpen = btn.classList.toggle('is-open');
+    content.classList.toggle('is-open', isOpen);
+  });
+
+  /* --- Tab switching (event delegation — works for dynamic tabs too) --- */
+  document.addEventListener('click', (e) => {
+    const tab = e.target.closest('.section-tab');
+    if (!tab) return;
+    e.stopPropagation();
+    const target = tab.dataset.tab;
+    const parent = tab.closest('.section__center') || document;
+    parent.querySelectorAll('.section-tab').forEach(t => t.classList.remove('is-open'));
+    tab.classList.add('is-open');
+    parent.querySelectorAll('.tab-content').forEach(c => c.classList.add('is-hidden'));
+    const content = document.getElementById('tab-' + target);
+    if (content) content.classList.remove('is-hidden');
+  });
+
+  /* --- Product section: JSON-driven rendering --- */
+  fetch('collections.json')
+    .then(r => r.json())
+    .then(data => {
+      const tabsEl = document.getElementById('productTabs');
+      const contentsEl = document.getElementById('productContents');
+      if (!tabsEl || !contentsEl) return;
+
+      data.collections.forEach((col, i) => {
+        const tab = document.createElement('button');
+        tab.className = 'section-tab reveal-trigger' + (i === 0 ? ' is-open' : '');
+        tab.dataset.tab = 'col-' + col.id;
+        if (col.soon) {
+          // Extract "26 피어싱 Collection" → "26 " + mosaic("피어싱") + " Collection"
+          const parts = col.name.match(/^(.*?\s)(\S+)(\s.*)$/);
+          if (parts) {
+            tab.innerHTML = parts[1] + '<span class="mosaic-text">' + parts[2] + '</span>' + parts[3] + ' (Soon)';
+          } else {
+            tab.innerHTML = '<span class="mosaic-text">' + col.name + '</span> (Soon)';
+          }
+        } else {
+          tab.textContent = col.name;
+        }
+        tabsEl.appendChild(tab);
+
+        const content = document.createElement('div');
+        content.className = 'tab-content' + (i > 0 ? ' is-hidden' : '');
+        content.id = 'tab-col-' + col.id;
+
+        if (col.soon) {
+          content.innerHTML = '<p class="product__soon">Coming Soon</p>';
+        } else {
+          // Culture title pill (main title, click to reveal carousel)
+          var cultureRevealId = 'col-' + col.id + '-reveal';
+          var titleWrap = document.createElement('div');
+          titleWrap.className = 'product__title-wrap';
+          titleWrap.innerHTML =
+            '<span class="reveal-trigger product__culture-title" data-reveal="' + cultureRevealId + '" role="button" tabindex="0">' + col.culture + '</span>';
+          content.appendChild(titleWrap);
+
+          // Center-focus carousel (starts blurred, revealed on pill click)
+          var carouselId = 'carousel-' + col.id;
+          var carousel = document.createElement('div');
+          carousel.className = 'product__carousel product__carousel--locked';
+          carousel.id = cultureRevealId;
+          const track = document.createElement('div');
+          track.className = 'product__carousel-track';
+          track.id = carouselId;
+
+          col.products.forEach((p, pi) => {
+            const slide = document.createElement('div');
+            slide.className = 'product__slide';
+            slide.dataset.index = pi;
+            slide.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy"><p>' + p.name + '</p>';
+            track.appendChild(slide);
+          });
+          carousel.appendChild(track);
+          content.appendChild(carousel);
+        }
+
+        contentsEl.appendChild(content);
+      });
+    })
+    .catch(() => {});
+
+  /* --- Drag-to-scroll for horizontal galleries --- */
+  document.addEventListener('mousedown', (e) => {
+    const track = e.target.closest('.product__carousel-track');
+    if (!track) return;
+    e.preventDefault();
+    let startX = e.clientX;
+    let scrollLeft = track.scrollLeft;
+    function onMove(ev) {
+      track.scrollLeft = scrollLeft - (ev.clientX - startX);
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
   });
 
   /* --- Init --- */
   updateUIVisibility();
+
+  /* --- 3D Box Button: global mouse tracking (always active) --- */
+  const revealBtns = document.querySelectorAll('.reveal-trigger');
+  let btnMouseX = window.innerWidth / 2;
+  let btnMouseY = window.innerHeight / 2;
+
+  document.addEventListener('mousemove', (e) => {
+    btnMouseX = e.clientX;
+    btnMouseY = e.clientY;
+  });
+
+  const BTN_RADIUS = 300; // px — effect radius around each button
+  const inlineCubeBox = document.getElementById('inlineCubeBox');
+
+  function updateBtnRotations() {
+    revealBtns.forEach(btn => {
+      const rect = btn.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = btnMouseX - cx;
+      const dy = btnMouseY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const falloff = Math.max(0, 1 - dist / BTN_RADIUS);
+      const rx = (dy / BTN_RADIUS) * -25 * falloff;
+      const ry = (dx / BTN_RADIUS) * 25 * falloff;
+      btn.style.setProperty('--rx', rx + 'deg');
+      btn.style.setProperty('--ry', ry + 'deg');
+    });
+
+    // Inline cube — global mouse direction tracking (no distance falloff)
+    if (inlineCubeBox) {
+      const mx = (btnMouseX / window.innerWidth - 0.5) * 2;
+      const my = (btnMouseY / window.innerHeight - 0.5) * 2;
+      inlineCubeBox.style.setProperty('--irx', (my * -35) + 'deg');
+      inlineCubeBox.style.setProperty('--iry', (mx * 35) + 'deg');
+    }
+
+    requestAnimationFrame(updateBtnRotations);
+  }
+  requestAnimationFrame(updateBtnRotations);
 
   /* --- Glitch bursts --- */
   const glitchEl = document.querySelector('.glitch');

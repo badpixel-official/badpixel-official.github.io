@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=46">
+  <link rel="stylesheet" href="css/style.css?v=76">
 </head>
 <body>
 
@@ -79,12 +79,11 @@
 
   <!-- Side Navigation (right) -->
   <nav class="side-nav" id="sideNav">
-    <button class="side-nav__btn active" data-goto="0">INTRO</button>
-    <button class="side-nav__btn" data-goto="1">BADPIXEL</button>
-    <button class="side-nav__btn" data-goto="2">Definition</button>
-    <button class="side-nav__btn" data-goto="3">Identity</button>
-    <button class="side-nav__btn" data-goto="4">Product</button>
-    <button class="side-nav__btn" data-goto="5">Contact</button>
+    <button class="side-nav__btn active" data-goto="0" data-cursor-action="navigate">INTRO</button>
+    <button class="side-nav__btn" data-goto="1" data-cursor-action="navigate">BADPIXEL</button>
+    <button class="side-nav__btn" data-goto="2" data-cursor-action="navigate">BRAND</button>
+    <button class="side-nav__btn" data-goto="3" data-cursor-action="navigate">PRODUCT</button>
+    <button class="side-nav__btn" data-goto="4" data-cursor-action="navigate">CONTACT</button>
   </nav>
 
   <!-- ============================================
@@ -104,97 +103,103 @@
     <section class="section" data-index="1">
       <div class="section__center">
         <h1 class="hero__title glitch" data-text="BADPIXEL">BADPIXEL</h1>
-        <p class="hero__tagline">시선을 사로잡는 하나의 점</p>
+        <p class="hero__tagline">시선을 사로잡는 하나의 <span class="inline-cube" aria-label="점"><span class="inline-cube__scene"><span class="inline-cube__box" id="inlineCubeBox"><span class="inline-cube__face inline-cube__face--front"></span><span class="inline-cube__face inline-cube__face--back"></span><span class="inline-cube__face inline-cube__face--left"></span><span class="inline-cube__face inline-cube__face--right"></span><span class="inline-cube__face inline-cube__face--top"></span><span class="inline-cube__face inline-cube__face--bottom"></span></span></span></span></p>
         <p class="hero__sub">다양한 문화에서 영감을 얻고, 패션 아이웨어로 재치있게 표현하는 브랜드</p>
       </div>
     </section>
 
     <!-- Section 2: DEFINITION -->
     <section class="section" data-index="2">
-      <div class="section__center section__center--left">
-        <div class="section__quote-block">
+      <div class="section__center">
+        <div class="symbol-flip">
+          <div class="symbol-flip__inner">
+            <img src="assets/images/symbol_BK.png" class="symbol-flip__front" alt="">
+            <img src="assets/images/Censor_BK.png" class="symbol-flip__back" alt="">
+          </div>
+        </div>
+
+        <!-- 인용문 (고정) -->
+        <div class="section__quote-block section__quote-block--center">
           <blockquote>
-            다양한 문화에서 영감을 얻고,<br>
-            <em>패션 아이웨어</em>로<br>
-            재치있게 표현하는 브랜드.
+            <span class="quote-line">다양한 문화에서 영감을 얻고,</span>
+            <span class="quote-line"><em>패션 아이웨어</em>로 재치있게 표현하는 브랜드.</span>
           </blockquote>
         </div>
-        <div class="section__body">
-          <span class="reveal-trigger" data-reveal="r1" role="button" tabindex="0">불량화소</span><span class="reveal-content" id="r1">는 화면 속 유일하게 눈에 들어오는 점이다. 그 점은 무엇을 담느냐에 따라 무한히 달라진다.</span>
-          우리는 그 점에 <span class="reveal-trigger" data-reveal="r2" role="button" tabindex="0">문화</span><span class="reveal-content" id="r2">를 담는다.</span> 그리고 <span class="reveal-trigger" data-reveal="r3" role="button" tabindex="0">패션 아이웨어</span><span class="reveal-content" id="r3">로 재치있게 꺼낸다.</span>
+
+        <!-- Tab buttons -->
+        <div class="section-tabs">
+          <button class="section-tab reveal-trigger is-open" data-tab="definition">Definition</button>
+          <button class="section-tab reveal-trigger" data-tab="identity">Identity</button>
+        </div>
+
+        <!-- Tab 1: Definition (기본 표시) -->
+        <div class="tab-content" id="tab-definition">
+          <div class="definition__stack">
+            <div class="definition__row">
+              <span class="reveal-trigger" data-reveal="r1" role="button" tabindex="0">불량화소</span>
+              <span class="reveal-content" id="r1">화면 속 유일하게 눈에 띄는 점. 무엇을 담느냐에 따라 무한히 달라진다.</span>
+            </div>
+            <div class="definition__row">
+              <span class="reveal-trigger" data-reveal="r2" role="button" tabindex="0">문화</span>
+              <span class="reveal-content" id="r2">우리는 그 점에 문화를 담는다.</span>
+            </div>
+            <div class="definition__row">
+              <span class="reveal-trigger" data-reveal="r3" role="button" tabindex="0">패션 아이웨어</span>
+              <span class="reveal-content" id="r3">재치있게 표현한다.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Identity (기본 숨김) -->
+        <div class="tab-content is-hidden" id="tab-identity">
+          <div class="identity__stack">
+            <div class="identity__row">
+              <span class="reveal-trigger identity__keyword" data-reveal="id1" role="button" tabindex="0">Cultural</span>
+              <span class="reveal-content identity__detail" id="id1">
+                <em>"문화가 곧 소스다"</em>
+                다양한 문화에서 영감을 얻고 파생시키는 브랜드의 원천.
+              </span>
+            </div>
+            <div class="identity__row">
+              <span class="reveal-trigger identity__keyword" data-reveal="id2" role="button" tabindex="0">Defiant</span>
+              <span class="reveal-content identity__detail" id="id2">
+                <em>"틀은 넘어서라고 있는 거다"</em>
+                기존의 틀을 부수고 재치있게 다시 만드는 태도.
+              </span>
+            </div>
+            <div class="identity__row">
+              <span class="reveal-trigger identity__keyword" data-reveal="id3" role="button" tabindex="0">Ironic</span>
+              <span class="reveal-content identity__detail" id="id3">
+                <em>"다른 시선으로 본다"</em>
+                문화 속 역설과 반전을 패션 아이웨어로 포착하는 시선.
+              </span>
+            </div>
+            <div class="identity__row">
+              <span class="reveal-trigger identity__keyword" data-reveal="id4" role="button" tabindex="0">Playful</span>
+              <span class="reveal-content identity__detail" id="id4">
+                <em>"진지하게 놀 줄 아는"</em>
+                문화는 결국 즐거움이어야 한다는 믿음.
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Section 3: IDENTITY -->
+    <!-- Section 3: PRODUCT -->
     <section class="section" data-index="3">
       <div class="section__center">
-        <div class="identity__stack">
-          <div class="identity__row">
-            <span class="reveal-trigger identity__keyword" data-reveal="id1" role="button" tabindex="0">Cultural</span>
-            <span class="reveal-content identity__detail" id="id1">
-              <em>"문화가 곧 소스다"</em>
-              다양한 문화에서 영감을 얻고 파생시키는 브랜드의 원천.
-            </span>
-          </div>
-          <div class="identity__row">
-            <span class="reveal-trigger identity__keyword" data-reveal="id2" role="button" tabindex="0">Defiant</span>
-            <span class="reveal-content identity__detail" id="id2">
-              <em>"틀은 넘어서라고 있는 거다"</em>
-              기존의 틀을 부수고 재치있게 다시 만드는 태도.
-            </span>
-          </div>
-          <div class="identity__row">
-            <span class="reveal-trigger identity__keyword" data-reveal="id3" role="button" tabindex="0">Ironic</span>
-            <span class="reveal-content identity__detail" id="id3">
-              <em>"다른 시선으로 본다"</em>
-              문화 속 역설과 반전을 패션 아이웨어로 포착하는 시선.
-            </span>
-          </div>
-          <div class="identity__row">
-            <span class="reveal-trigger identity__keyword" data-reveal="id4" role="button" tabindex="0">Playful</span>
-            <span class="reveal-content identity__detail" id="id4">
-              <em>"진지하게 놀 줄 아는"</em>
-              문화는 결국 즐거움이어야 한다는 믿음.
-            </span>
-          </div>
-        </div>
-        <p class="identity__tone">
-          겉은 건조하고 시니컬. 하지만 가까워지면 공감되는.<br>
-          <span class="accent">진입장벽을 없애는 게 아니라, 재미로 넘게 해준다.</span>
-        </p>
-      </div>
-    </section>
-
-    <!-- Section 4: PRODUCT -->
-    <section class="section" data-index="4">
-      <div class="section__center">
         <p class="section__body" style="margin-bottom: 40px;">
-          아이웨어는 BADPIXEL이 문화를 담는 <span class="reveal-trigger" data-reveal="pd0" role="button" tabindex="0">첫 번째 캔버스</span><span class="reveal-content" id="pd0">. 문화가 담기는 방식에 따라 형태는 확장된다.</span>
+          <strong class="product__brand">BADPIXEL</strong>의 아이웨어는
+          <span class="reveal-trigger" data-reveal="pd0" role="button" tabindex="0">문화</span> <span class="reveal-content" id="pd0">가 담기는 방식에 따라 형태가 확장된다.</span>
         </p>
-        <div class="product__collections">
-          <div class="product__col">
-            <div class="product__img-wrap">
-              <img src="assets/images/product/q1/null1.png" alt="Q1 키링 컬쳐" class="product__img" loading="lazy">
-            </div>
-            <span class="label">26Q1</span>
-            <span class="reveal-trigger" data-reveal="pd1" role="button" tabindex="0">키링 컬쳐</span>
-            <span class="reveal-content product__concept" id="pd1">"아이웨어 자체가 키링이 된다면?"</span>
-          </div>
-          <div class="product__col">
-            <div class="product__img-wrap">
-              <img src="assets/images/product/q2/5-1.png" alt="Q2 피어싱 컬쳐" class="product__img" loading="lazy">
-            </div>
-            <span class="label">26Q2</span>
-            <span class="reveal-trigger" data-reveal="pd2" role="button" tabindex="0">피어싱 컬쳐</span>
-            <span class="reveal-content product__concept" id="pd2">"얼굴 위의 피어싱, 아이웨어가 된다면?"</span>
-          </div>
-        </div>
+        <div class="section-tabs" id="productTabs"></div>
+        <div id="productContents"></div>
       </div>
     </section>
 
-    <!-- Section 5: CONTACT -->
-    <section class="section" data-index="5">
+    <!-- Section 4: CONTACT -->
+    <section class="section" data-index="4">
       <div class="section__center">
         <img src="assets/images/LOGO-BK.png" alt="BADPIXEL" class="footer__logo">
         <p class="footer__tagline">시선을 사로잡는 하나의 점</p>
@@ -210,6 +215,6 @@
 
   </main>
 
-  <script src="js/main.js?v=42"></script>
+  <script src="js/main.js?v=74"></script>
 </body>
 </html>

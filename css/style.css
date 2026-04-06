@@ -122,29 +122,64 @@ a:hover { color: var(--gray-500); }
 .reveal-trigger {
   display: inline-block;
   position: relative;
-  background: none;
+  background: var(--black);
   border: 1.5px solid var(--black);
-  border-radius: 9999px;
+  border-radius: 0;
   font-family: inherit;
   font-size: inherit;
+  font-weight: 700;
   line-height: 1.4;
-  color: var(--black);
-  padding: 2px 10px;
+  color: var(--white);
+  padding: 1px 4px;
   cursor: pointer;
-  transition: background 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease);
+  perspective: 400px;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: box-shadow 0.3s var(--ease);
+  box-shadow:
+    2px 2px 0 var(--black),
+    inset 0 0 0 0 transparent;
+  animation: btnGlitch 3s steps(1) infinite;
   white-space: nowrap;
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .reveal-trigger:hover {
-  border-color: var(--black);
+  animation-play-state: paused;
+  box-shadow: 3px 3px 0 var(--black);
+  text-shadow: none;
 }
 
 .reveal-trigger.is-open {
-  background: var(--black);
+  background: var(--white);
   border-color: var(--black);
-  color: var(--white);
+  color: var(--black);
+  box-shadow: 2px 2px 0 var(--gray-700);
+  animation: none;
+}
+
+@keyframes btnGlitch {
+  0%, 85% {
+    text-shadow: none;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  }
+  86% {
+    text-shadow: -2px 0 var(--accent), 2px 0 var(--accent-b);
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translate(2px, -1px);
+  }
+  88% {
+    text-shadow: 2px 0 var(--accent-g), -1px 0 var(--accent);
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translate(-3px, 1px);
+  }
+  90% {
+    text-shadow: -1px 0 var(--accent-b), 3px 0 var(--accent);
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translate(1px, 2px);
+  }
+  92%, 100% {
+    text-shadow: none;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  }
 }
 
 /* Reveal content — blurred until opened */
@@ -178,6 +213,10 @@ a:hover { color: var(--gray-500); }
   margin-bottom: 32px;
 }
 
+.quote-line {
+  display: block;
+}
+
 .section__quote-block blockquote {
   font-family: var(--font-display);
   font-size: clamp(1.2rem, 2.5vw, 2rem);
@@ -187,9 +226,51 @@ a:hover { color: var(--gray-500); }
   padding-left: clamp(16px, 2vw, 32px);
 }
 
+/* Center variant — no left border */
+.section__quote-block--center blockquote {
+  border-left: none;
+  padding-left: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .section__quote-block em {
   font-style: normal;
   color: var(--black);
+}
+
+/* ================================================
+   Symbol Flip — 3D rotating symbol
+   ================================================ */
+.symbol-flip {
+  width: 120px;
+  height: 120px;
+  perspective: 600px;
+  margin: 0 auto 32px;
+}
+.symbol-flip__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: symbolFlip 4s ease-in-out infinite;
+}
+.symbol-flip__front,
+.symbol-flip__back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  object-fit: contain;
+}
+.symbol-flip__back {
+  transform: rotateY(180deg);
+}
+
+@keyframes symbolFlip {
+  0%, 40%  { transform: rotateY(0deg); }
+  50%, 90% { transform: rotateY(180deg); }
+  100%     { transform: rotateY(360deg); }
 }
 
 /* ================================================
@@ -452,6 +533,57 @@ body.cursor-active .side-nav__btn { cursor: pointer; }
   89%,100% { transform: translate(0); opacity: 0; }
 }
 
+/* Inline 3D cube replacing "점" — same as intro cube */
+.inline-cube {
+  --ihalf: 0.5em;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  perspective: 300px;
+  vertical-align: -0.1em;
+  margin-left: 8px;
+}
+.inline-cube__scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+.inline-cube__box {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--irx, -15deg)) rotateY(var(--iry, 20deg));
+}
+.inline-cube__face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--black);
+  backface-visibility: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+.inline-cube__face--front  { transform: translateZ(var(--ihalf)); }
+.inline-cube__face--back   { transform: translateZ(calc(var(--ihalf) * -1)) rotateY(180deg); }
+.inline-cube__face--left   { transform: translateX(calc(var(--ihalf) * -1)) rotateY(-90deg); }
+.inline-cube__face--right  { transform: translateX(var(--ihalf)) rotateY(90deg); }
+.inline-cube__face--top    { transform: translateY(calc(var(--ihalf) * -1)) rotateX(90deg); }
+.inline-cube__face--bottom { transform: translateY(var(--ihalf)) rotateX(-90deg); }
+
+/* Inline cube glitch — RGB drop-shadow on the container */
+.inline-cube__scene {
+  animation: inlineCubeGlitch 3s infinite;
+}
+@keyframes inlineCubeGlitch {
+  0%, 70% { filter: none; }
+  72% { filter: drop-shadow(3px -1px 0 var(--accent)) drop-shadow(-2px 1px 0 var(--accent-b)); }
+  74% { filter: drop-shadow(-3px 2px 0 var(--accent-g)) drop-shadow(2px -1px 0 var(--accent)); }
+  76% { filter: drop-shadow(2px 1px 0 var(--accent-b)) drop-shadow(-3px -2px 0 var(--accent)); }
+  78% { filter: drop-shadow(-1px -2px 0 var(--accent)) drop-shadow(3px 1px 0 var(--accent-g)); }
+  80%, 100% { filter: none; }
+}
+
 .hero__tagline {
   font-size: clamp(1.1rem, 2.5vw, 1.6rem);
   color: var(--black);
@@ -492,6 +624,52 @@ body.cursor-active .side-nav__btn { cursor: pointer; }
 }
 
 /* ================================================
+   Tab UI — pill button tabs
+   ================================================ */
+.section-tabs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.tab-content.is-hidden {
+  display: none;
+}
+
+/* Fixed top content, tab area fills remaining space */
+.tab-content {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ================================================
+   Definition (Section 2) — Vertical stack + reveal
+   ================================================ */
+.definition__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.definition__row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gray-200, #e5e5e5);
+}
+
+.definition__row:last-child {
+  border-bottom: none;
+}
+
+/* ================================================
    Identity (Section 3) — Vertical stack + reveal
    ================================================ */
 .identity__stack {
@@ -501,12 +679,13 @@ body.cursor-active .side-nav__btn { cursor: pointer; }
   text-align: left;
   width: 100%;
   max-width: 720px;
+  margin: 0 auto;
 }
 
 .identity__row {
   display: flex;
   align-items: baseline;
-  gap: 20px;
+  gap: 16px;
   padding: 8px 0;
   border-bottom: 1px solid var(--gray-200, #e5e5e5);
 }
@@ -516,12 +695,10 @@ body.cursor-active .side-nav__btn { cursor: pointer; }
 }
 
 .identity__keyword {
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-family: inherit;
+  font-size: inherit;
   font-weight: 700;
-  letter-spacing: -0.02em;
   flex-shrink: 0;
-  padding: 4px 16px;
 }
 
 .identity__detail {
@@ -546,45 +723,119 @@ body.cursor-active .side-nav__btn { cursor: pointer; }
 }
 
 /* ================================================
-   Product (Section 4) — Collections + reveal
+   Product (Section 3) — JSON-driven collections
    ================================================ */
-.product__collections {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(24px, 3vw, 48px);
-  text-align: left;
+.product__brand {
+  font-family: var(--font-display);
+  font-size: inherit;
+  font-weight: 900;
 }
 
-.product__img-wrap {
-  overflow: hidden;
-  border-radius: 4px;
-  background: var(--gray-100, #f5f5f5);
-  margin-bottom: 12px;
+/* Horizontal scroll gallery */
+.product__carousel {
+  width: 100%;
+  margin-bottom: 16px;
 }
 
-.product__img-wrap:hover .product__img {
+.product__carousel-track {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: none;
+  padding: 8px 0 16px;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+
+.product__carousel-track:active {
+  cursor: grabbing;
+}
+
+.product__carousel-track::-webkit-scrollbar {
+  height: 3px;
+}
+.product__carousel-track::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+.product__carousel-track::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 2px;
+}
+
+.product__slide {
+  flex: 0 0 clamp(260px, 35vw, 380px);
+  /* no snap */
+  text-align: center;
+}
+
+.product__slide img {
+  width: 100%;
+  height: clamp(220px, 38vh, 360px);
+  object-fit: contain;
+  background: var(--gray-100);
+  border-radius: 6px;
+  transition: transform 0.3s var(--ease);
+}
+
+.product__slide:hover img {
   transform: scale(1.03);
 }
 
-.product__img {
-  width: 100%;
-  max-height: 280px;
-  object-fit: contain;
-  transition: transform 0.4s var(--ease);
-  display: block;
+.product__slide p {
+  margin-top: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
-.product__col .reveal-trigger {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 4px;
+/* Collection culture title — main title, centered, large */
+.product__title-wrap {
+  text-align: center;
+  margin-bottom: 24px;
 }
 
-.product__concept {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--black);
+.product__culture-title {
+  font-size: clamp(1.4rem, 3vw, 2rem) !important;
+  padding: 6px 20px !important;
+}
+
+/* Carousel locked state — blurred + glitch until pill click */
+.product__carousel--locked {
+  filter: blur(12px);
+  opacity: 0.5;
+  transition: filter 0.6s var(--ease), opacity 0.6s var(--ease);
+  pointer-events: none;
+  animation: carouselGlitch 2s steps(1) infinite;
+}
+
+.product__carousel--locked.is-open {
+  filter: blur(0px);
+  opacity: 1;
+  pointer-events: auto;
+  animation: none;
+}
+
+@keyframes carouselGlitch {
+  0%, 85% { transform: translate(0); }
+  86% { transform: translate(3px, -2px); }
+  88% { transform: translate(-4px, 1px); }
+  90% { transform: translate(2px, 3px); }
+  92%, 100% { transform: translate(0); }
+}
+
+/* Mosaic text — heavy blur to hide content */
+.mosaic-text {
+  filter: blur(6px);
+  user-select: none;
+  display: inline-block;
+}
+
+/* Soon placeholder */
+.product__soon {
+  text-align: center;
+  color: var(--gray-300);
+  font-size: 1.2rem;
+  padding: 60px 0;
+  font-weight: 400;
 }
 
 /* ================================================
@@ -753,7 +1004,36 @@ body.is-transitioning .tv-effect--scanbar {
    Responsive
    ================================================ */
 @media (max-width: 768px) {
-  .side-nav { display: none; }
+  /* Side nav → top mini nav */
+  .side-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    bottom: auto;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 101;
+  }
+  .side-nav__btn {
+    font-size: 9px;
+    padding: 3px 8px;
+    letter-spacing: 0.03em;
+  }
+
+  /* Product section — scrollable on mobile */
+  .section[data-index="4"] {
+    overflow-y: auto;
+    align-items: flex-start;
+    padding: 60px 0 40px;
+  }
+  .section[data-index="4"] .section__center {
+    padding-top: 20px;
+  }
 
   .identity__row { flex-direction: column; gap: 8px; }
   .product__collections { grid-template-columns: 1fr; }
