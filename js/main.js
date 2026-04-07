@@ -126,7 +126,14 @@
           glitchOverlay.classList.remove('is-active');
           document.body.classList.remove('is-transitioning');
           if (viewport) viewport.style.transform = '';
-          if (pixelEl) pixelEl.style.opacity = '1';
+          if (pixelEl) {
+            // On mobile, only show pixel on intro
+            if (window.innerWidth <= 768) {
+              pixelEl.style.opacity = (currentSection === INTRO) ? '1' : '0';
+            } else {
+              pixelEl.style.opacity = '1';
+            }
+          }
           cancelAnimationFrame(waveRaf);
           resolve();
         }, 600);
@@ -167,6 +174,12 @@
   function updateUIVisibility() {
     const isIntro = (currentSection === INTRO);
     if (scrollHint) scrollHint.style.opacity = isIntro ? '1' : '0';
+    // Hide cube on non-intro sections when width <= 768 (mobile)
+    const pixelEl = document.getElementById('pixel');
+    if (pixelEl && window.innerWidth <= 768) {
+      pixelEl.style.opacity = isIntro ? '1' : '0';
+      pixelEl.style.pointerEvents = isIntro ? '' : 'none';
+    }
   }
 
   /* --- Wheel --- */
@@ -381,6 +394,27 @@
     document.addEventListener('mouseup', onUp);
   });
 
+  // Touch drag support for horizontal galleries
+  document.addEventListener('touchstart', (e) => {
+    const track = e.target.closest('.product__carousel-track');
+    if (!track) return;
+    const section = track.closest('.section');
+    if (!section || !section.classList.contains('active')) return;
+    let startX = e.touches[0].clientX;
+    let scrollLeft = track.scrollLeft;
+
+    function onTouchMove(ev) {
+      ev.preventDefault();
+      track.scrollLeft = scrollLeft - (ev.touches[0].clientX - startX);
+    }
+    function onTouchEnd() {
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+    }
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+  }, { passive: true });
+
   // Force cleanup on section transition
   const origGoToSection = goToSection;
   goToSection = function(index) {
@@ -391,10 +425,11 @@
   /* --- Init --- */
   updateUIVisibility();
 
-  /* --- 3D Box Button: global mouse tracking (always active) --- */
+  /* --- 3D Box Button: global mouse tracking (desktop only) --- */
   const revealBtns = document.querySelectorAll('.reveal-trigger');
   let btnMouseX = window.innerWidth / 2;
   let btnMouseY = window.innerHeight / 2;
+  const isTouchOnly = 'ontouchstart' in window;
 
   document.addEventListener('mousemove', (e) => {
     btnMouseX = e.clientX;
@@ -429,7 +464,7 @@
 
     requestAnimationFrame(updateBtnRotations);
   }
-  requestAnimationFrame(updateBtnRotations);
+  if (!isTouchOnly) requestAnimationFrame(updateBtnRotations);
 
   /* --- Glitch bursts --- */
   const glitchEl = document.querySelector('.glitch');
@@ -495,6 +530,7 @@
     }
 
     function setCursorMode(on) {
+      if (isTouchDevice) { on = false; } // No cursor mode on touch devices
       isCursorMode = on;
       pixelEl.classList.toggle('pixel--cursor', on);
       document.body.classList.toggle('cursor-active', on);
@@ -514,5 +550,25 @@
     // Always run animation
     rafId = requestAnimationFrame(animate);
   }
+
+  /* --- Mobile: hide identity description text, show em only --- */
+  function stripIdentityDesc() {
+    if (window.innerWidth > 768) return;
+    document.querySelectorAll('.identity__detail').forEach(el => {
+      if (el.dataset.stripped) return;
+      el.childNodes.forEach(n => {
+        if (n.nodeType === 3 && n.textContent.trim()) n.textContent = '';
+      });
+      var desc = el.querySelector('.identity__desc');
+      if (desc) desc.remove();
+      el.dataset.stripped = '1';
+    });
+  }
+  stripIdentityDesc();
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('[data-tab="identity"]')) {
+      requestAnimationFrame(stripIdentityDesc);
+    }
+  });
 
 })();
