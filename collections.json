@@ -7,16 +7,21 @@
       "concept": "아이웨어 자체가 키링이 된다면?",
       "soon": false,
       "products": [
-        { "name": "널", "image": "assets/images/product/q1/null1.png" },
-        { "name": "비카", "image": "assets/images/product/q1/vica1.png" },
-        { "name": "널 (2)", "image": "assets/images/product/q1/null1.png" },
-        { "name": "비카 (2)", "image": "assets/images/product/q1/vica1.png" },
-        { "name": "널 (3)", "image": "assets/images/product/q1/null1.png" }
+        { "name": "BIKA", "image": "assets/images/product/q1/BIKA-01_2.png" },
+        { "name": "BIKA", "image": "assets/images/product/q1/BIKA-02_2.png" },
+        { "name": "BIKO", "image": "assets/images/product/q1/BIKO-01_2.png" },
+        { "name": "GAZEL", "image": "assets/images/product/q1/GAZEL-01_2.png" },
+        { "name": "GAZEL", "image": "assets/images/product/q1/GAZEL-02_2.png" },
+        { "name": "NER", "image": "assets/images/product/q1/NER-01_2.png" },
+        { "name": "NER", "image": "assets/images/product/q1/NER-02_2.png" },
+        { "name": "SMITH", "image": "assets/images/product/q1/SMITH-01_2.png" },
+        { "name": "TULA", "image": "assets/images/product/q1/TULA-01_2.png" },
+        { "name": "TULA", "image": "assets/images/product/q1/TULA-02_2.png" }
       ],
       "lookbook": [
-        { "name": "LOOK 01", "image": "assets/images/product/q1/null1.png" },
-        { "name": "LOOK 02", "image": "assets/images/product/q1/vica1.png" },
-        { "name": "LOOK 03", "image": "assets/images/product/q1/null1.png" }
+        { "name": "HANG ON 01", "image": "assets/images/data vault/hang on_1.png" },
+        { "name": "HANG ON 02", "image": "assets/images/data vault/hang on_2.png" },
+        { "name": "HANG ON 03", "image": "assets/images/data vault/hang on_3.png" }
       ]
     },
     {

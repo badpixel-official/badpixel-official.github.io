@@ -185,7 +185,7 @@
   /* --- Wheel --- */
   let wheelCooldown = false;
   document.addEventListener('wheel', (e) => {
-    if (wheelCooldown || isTransitioning) return;
+    if (wheelCooldown || isTransitioning || dragActive) return;
     wheelCooldown = true;
 
     const down = e.deltaY > 0;
@@ -195,16 +195,21 @@
     setTimeout(() => { wheelCooldown = false; }, 1200);
   }, { passive: true });
 
-  /* --- Touch --- */
+  /* --- Touch (section nav — vertical swipe only) --- */
   let touchStartY = 0;
+  let touchStartX = 0;
   document.addEventListener('touchstart', (e) => {
     touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
   }, { passive: true });
 
   document.addEventListener('touchend', (e) => {
-    const diff = touchStartY - e.changedTouches[0].clientY;
-    if (Math.abs(diff) < 50) return;
-    goToSection(diff > 0 ? currentSection + 1 : currentSection - 1);
+    if (dragActive) return;
+    const diffY = touchStartY - e.changedTouches[0].clientY;
+    const diffX = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diffY) < 50) return;
+    if (Math.abs(diffY) < Math.abs(diffX) * 1.5) return;
+    goToSection(diffY > 0 ? currentSection + 1 : currentSection - 1);
   }, { passive: true });
 
   /* --- Keyboard --- */
@@ -394,25 +399,35 @@
     document.addEventListener('mouseup', onUp);
   });
 
-  // Touch drag support for horizontal galleries
+  // Touch drag support for horizontal galleries (with direction lock)
   document.addEventListener('touchstart', (e) => {
     const track = e.target.closest('.product__carousel-track');
     if (!track) return;
     const section = track.closest('.section');
     if (!section || !section.classList.contains('active')) return;
     let startX = e.touches[0].clientX;
+    let startY = e.touches[0].clientY;
     let scrollLeft = track.scrollLeft;
+    let locked = false;
 
     function onTouchMove(ev) {
+      if (!locked) {
+        var dx = Math.abs(ev.touches[0].clientX - startX);
+        var dy = Math.abs(ev.touches[0].clientY - startY);
+        if (dx + dy < 10) return;
+        if (dx > dy) { locked = true; dragActive = true; }
+        else { cleanup(); return; }
+      }
       ev.preventDefault();
       track.scrollLeft = scrollLeft - (ev.touches[0].clientX - startX);
     }
-    function onTouchEnd() {
+    function cleanup() {
+      dragActive = false;
       document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('touchend', cleanup);
     }
     document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd);
+    document.addEventListener('touchend', cleanup);
   }, { passive: true });
 
   // Force cleanup on section transition

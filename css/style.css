@@ -793,6 +793,7 @@ body.cursor-active .side-nav__btn { cursor: pointer; }
   padding: 8px 0 16px;
   -webkit-overflow-scrolling: touch;
   cursor: grab;
+  touch-action: pan-x;
 }
 
 .product__carousel-track:active {
@@ -1081,20 +1082,24 @@ body.is-transitioning .tv-effect--scanbar {
   /* Product section — scrollable on mobile */
   .section[data-index="3"] {
     overflow-y: auto;
-    align-items: flex-start;
-    padding: 60px 0 40px;
+    align-items: center;
+    padding: 50px 0 0;
   }
   .section[data-index="3"] .section__center {
-    padding-top: 20px;
+    padding-top: 0;
+  }
+  .section[data-index="3"] #productTabs {
+    margin-bottom: 20px;
+  }
+  .section[data-index="3"] #productContents {
+    margin-top: 12px;
   }
 
-  /* Pill buttons — touch-friendly size */
+  /* Pill buttons — compact on mobile */
   .reveal-trigger {
-    padding: 8px 16px;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    font-size: 14px;
+    padding: 5px 12px;
+    min-height: auto;
+    font-size: 13px;
   }
 
   /* Product slides — smaller on mobile */
