@@ -230,17 +230,32 @@
     });
   });
 
-  /* --- Reveal triggers (event delegation — works for dynamic elements too) --- */
+  /* --- Reveal triggers (event delegation — glitch border toggle on click) --- */
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.reveal-trigger:not(.section-tab)');
-    if (!btn) return;
+    if (!btn || btn.classList.contains('is-removing') || btn.classList.contains('is-restoring')) return;
     e.stopPropagation();
     const targetId = btn.dataset.reveal;
     const content = document.getElementById(targetId);
     if (!content) return;
 
-    const isOpen = btn.classList.toggle('is-open');
-    content.classList.toggle('is-open', isOpen);
+    if (!btn.classList.contains('is-open')) {
+      // Open: glitch border away
+      btn.classList.add('is-removing');
+      content.classList.add('is-open');
+      setTimeout(function() {
+        btn.classList.add('is-open');
+        btn.classList.remove('is-removing');
+      }, 350);
+    } else {
+      // Close: glitch border back
+      btn.classList.add('is-restoring');
+      content.classList.remove('is-open');
+      setTimeout(function() {
+        btn.classList.remove('is-open');
+        btn.classList.remove('is-restoring');
+      }, 350);
+    }
   });
 
   /* --- Tab switching (event delegation — scoped to paired tab-content) --- */
@@ -439,6 +454,29 @@
 
   /* --- Init --- */
   updateUIVisibility();
+
+  /* --- Symbol Glitch: periodic glitch + image swap --- */
+  (function() {
+    var inner = document.querySelector('.symbol-flip__inner');
+    if (!inner) return;
+    var front = inner.querySelector('.symbol-flip__front');
+    var back = inner.querySelector('.symbol-flip__back');
+    var showingFront = true;
+
+    function doGlitch() {
+      inner.classList.add('is-glitching');
+      setTimeout(function() {
+        showingFront = !showingFront;
+        front.style.opacity = showingFront ? '1' : '0';
+        back.style.opacity = showingFront ? '0' : '1';
+      }, 200);
+      setTimeout(function() {
+        inner.classList.remove('is-glitching');
+      }, 400);
+    }
+
+    setInterval(doGlitch, 3500);
+  })();
 
   /* --- 3D Box Button: global mouse tracking (desktop only) --- */
   const revealBtns = document.querySelectorAll('.reveal-trigger');
