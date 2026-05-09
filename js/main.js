@@ -182,25 +182,74 @@
     }
   }
 
-  /* --- Wheel --- */
+  /* --- Scrollable section detection ---
+     섹션이 자체 overflow-y:auto/scroll 이고 콘텐츠가 더 클 때만 "스크롤 가능"으로 본다.
+     wheel/touch/keyboard가 가장자리에서만 섹션 이동을 트리거하도록 함. */
+  function getActiveScrollState() {
+    const sec = document.querySelector('.section.active');
+    if (!sec) return { sec: null, scrollable: false, atTop: true, atBottom: true };
+    const overflow = getComputedStyle(sec).overflowY;
+    const isScrollable = (overflow === 'auto' || overflow === 'scroll')
+      && sec.scrollHeight > sec.clientHeight + 1;
+    if (!isScrollable) return { sec, scrollable: false, atTop: true, atBottom: true };
+    return {
+      sec,
+      scrollable: true,
+      atTop: sec.scrollTop <= 0,
+      atBottom: sec.scrollTop + sec.clientHeight >= sec.scrollHeight - 1,
+    };
+  }
+
+  /* --- Wheel ---
+     스크롤 가능한 섹션 안에서는 가장자리에 도달하기 전엔 브라우저 스크롤만 수행,
+     가장자리(top/bottom)에서 추가 wheel이 들어오면 섹션 이동. */
   let wheelCooldown = false;
+  let edgeArrivalTime = 0; // 가장자리 도달 직후 우발적 점프 방지용
   document.addEventListener('wheel', (e) => {
     if (wheelCooldown || isTransitioning || dragActive) return;
-    wheelCooldown = true;
 
     const down = e.deltaY > 0;
+    const ss = getActiveScrollState();
+
+    if (ss.scrollable) {
+      const justArrived = (down && ss.atBottom) || (!down && ss.atTop);
+      // 콘텐츠 스크롤이 가능 → 가장자리 아니면 브라우저에 양보
+      if (down && !ss.atBottom) {
+        edgeArrivalTime = 0;
+        return;
+      }
+      if (!down && !ss.atTop) {
+        edgeArrivalTime = 0;
+        return;
+      }
+      // 가장자리 도착 직후라면 한 박자 쉼 (콘텐츠 끝 보고 정지할 시간)
+      if (justArrived && edgeArrivalTime === 0) {
+        edgeArrivalTime = Date.now();
+        return;
+      }
+      if (Date.now() - edgeArrivalTime < 350) return;
+      edgeArrivalTime = 0;
+    }
+
+    wheelCooldown = true;
     if (down) goToSection(currentSection + 1);
     else goToSection(currentSection - 1);
-
     setTimeout(() => { wheelCooldown = false; }, 1200);
   }, { passive: true });
 
-  /* --- Touch (section nav — vertical swipe only) --- */
+  /* --- Touch (section nav — vertical swipe only) ---
+     touchstart 시점의 edge 상태를 기록 → 그 시점에 가장자리였을 때만 섹션 이동.
+     스와이프 도중 콘텐츠가 스크롤되어 가장자리에 도달한 경우는 섹션 이동 안 함. */
   let touchStartY = 0;
   let touchStartX = 0;
+  let touchStartAtTop = true;
+  let touchStartAtBottom = true;
   document.addEventListener('touchstart', (e) => {
     touchStartY = e.touches[0].clientY;
     touchStartX = e.touches[0].clientX;
+    const ss0 = getActiveScrollState();
+    touchStartAtTop = !ss0.scrollable || ss0.atTop;
+    touchStartAtBottom = !ss0.scrollable || ss0.atBottom;
   }, { passive: true });
 
   document.addEventListener('touchend', (e) => {
@@ -209,15 +258,31 @@
     const diffX = touchStartX - e.changedTouches[0].clientX;
     if (Math.abs(diffY) < 50) return;
     if (Math.abs(diffY) < Math.abs(diffX) * 1.5) return;
-    goToSection(diffY > 0 ? currentSection + 1 : currentSection - 1);
+    const swipeUp = diffY > 0; // 위로 스와이프 = 다음 섹션
+    if (swipeUp && !touchStartAtBottom) return; // 콘텐츠 스크롤만 한 케이스
+    if (!swipeUp && !touchStartAtTop) return;
+    goToSection(swipeUp ? currentSection + 1 : currentSection - 1);
   }, { passive: true });
 
-  /* --- Keyboard --- */
+  /* --- Keyboard ---
+     스크롤 가능 섹션에서 가장자리가 아니면 화살표는 콘텐츠 스크롤,
+     가장자리면 섹션 이동. */
   document.addEventListener('keydown', (e) => {
+    const ss = getActiveScrollState();
     if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+      if (ss.scrollable && !ss.atBottom) {
+        e.preventDefault();
+        ss.sec.scrollBy({ top: e.key === 'PageDown' ? ss.sec.clientHeight * 0.8 : 80, behavior: 'smooth' });
+        return;
+      }
       e.preventDefault();
       goToSection(currentSection + 1);
     } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      if (ss.scrollable && !ss.atTop) {
+        e.preventDefault();
+        ss.sec.scrollBy({ top: e.key === 'PageUp' ? -ss.sec.clientHeight * 0.8 : -80, behavior: 'smooth' });
+        return;
+      }
       e.preventDefault();
       goToSection(currentSection - 1);
     }
@@ -341,35 +406,73 @@
             '<button class="section-tab reveal-trigger" data-tab="dv-' + col.id + '">Data Vault</button>';
           blurArea.appendChild(viewTabs);
 
-          // 2b. Product gallery
+          // 2b. Product gallery — 3-col grid
           var pvContent = document.createElement('div');
           pvContent.className = 'tab-content';
           pvContent.id = 'tab-pv-' + col.id;
-          var pvTrack = document.createElement('div');
-          pvTrack.className = 'product__carousel-track';
-          col.products.forEach(function(p) {
+          var pvGrid = document.createElement('div');
+          pvGrid.className = 'product__grid';
+          col.products.forEach(function(p, idx) {
             var card = document.createElement('div');
             card.className = 'product__slide';
             card.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy">';
-            pvTrack.appendChild(card);
+            card.addEventListener('click', function() {
+              openLightbox(col.products, idx);
+            });
+            pvGrid.appendChild(card);
           });
-          pvContent.appendChild(pvTrack);
+          pvContent.appendChild(pvGrid);
           blurArea.appendChild(pvContent);
 
-          // 2c. Data Vault gallery
+          // 2c. Data Vault gallery — Editorial spread (hero + side + below)
           var dvContent = document.createElement('div');
           dvContent.className = 'tab-content is-hidden';
           dvContent.id = 'tab-dv-' + col.id;
           if (col.lookbook && col.lookbook.length > 0) {
-            var dvTrack = document.createElement('div');
-            dvTrack.className = 'product__carousel-track';
-            col.lookbook.forEach(function(p) {
-              var card = document.createElement('div');
-              card.className = 'product__slide';
-              card.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy">';
-              dvTrack.appendChild(card);
-            });
-            dvContent.appendChild(dvTrack);
+            var lb = col.lookbook;
+            var spread = document.createElement('div');
+            spread.className = 'product__editorial';
+
+            // Hero (item 0)
+            var hero = document.createElement('div');
+            hero.className = 'editorial__hero';
+            hero.innerHTML = '<img src="' + lb[0].image + '" alt="' + lb[0].name + '" loading="lazy">';
+            hero.addEventListener('click', function() { openLightbox(lb, 0); });
+            spread.appendChild(hero);
+
+            // Side stack (items 1, 2, 3 — up to 3)
+            if (lb.length > 1) {
+              var side = document.createElement('div');
+              side.className = 'editorial__side';
+              for (var i = 1; i < Math.min(4, lb.length); i++) {
+                (function(idx) {
+                  var card = document.createElement('div');
+                  card.className = 'product__slide';
+                  card.innerHTML = '<img src="' + lb[idx].image + '" alt="' + lb[idx].name + '" loading="lazy">';
+                  card.addEventListener('click', function() { openLightbox(lb, idx); });
+                  side.appendChild(card);
+                })(i);
+              }
+              spread.appendChild(side);
+            }
+
+            // Below grid (items 4..end — 4-col)
+            if (lb.length > 4) {
+              var below = document.createElement('div');
+              below.className = 'editorial__below';
+              for (var j = 4; j < lb.length; j++) {
+                (function(idx) {
+                  var card = document.createElement('div');
+                  card.className = 'product__slide';
+                  card.innerHTML = '<img src="' + lb[idx].image + '" alt="' + lb[idx].name + '" loading="lazy">';
+                  card.addEventListener('click', function() { openLightbox(lb, idx); });
+                  below.appendChild(card);
+                })(j);
+              }
+              spread.appendChild(below);
+            }
+
+            dvContent.appendChild(spread);
           } else {
             dvContent.innerHTML = '<p class="product__soon">Coming Soon</p>';
           }
@@ -382,6 +485,94 @@
       });
     })
     .catch(() => {});
+
+  /* --- Lightbox: full-screen image viewer --- */
+  var lightboxState = { gallery: [], index: 0 };
+
+  function ensureLightboxDOM() {
+    if (document.getElementById('lightbox')) return;
+    var lb = document.createElement('div');
+    lb.id = 'lightbox';
+    lb.className = 'lightbox';
+    lb.innerHTML =
+      '<img class="lightbox__img" alt="">' +
+      '<button class="lightbox__btn lightbox__btn--prev" aria-label="이전">‹</button>' +
+      '<button class="lightbox__btn lightbox__btn--next" aria-label="다음">›</button>' +
+      '<button class="lightbox__btn lightbox__btn--close" aria-label="닫기">×</button>' +
+      '<div class="lightbox__indicator"></div>';
+    document.body.appendChild(lb);
+
+    lb.querySelector('.lightbox__btn--prev').addEventListener('click', function(e) {
+      e.stopPropagation();
+      navLightbox(-1);
+    });
+    lb.querySelector('.lightbox__btn--next').addEventListener('click', function(e) {
+      e.stopPropagation();
+      navLightbox(1);
+    });
+    lb.querySelector('.lightbox__btn--close').addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeLightbox();
+    });
+    // Click on backdrop closes (but not on image or buttons)
+    lb.addEventListener('click', function(e) {
+      if (e.target === lb) closeLightbox();
+    });
+    // Keyboard: ←/→ navigate, Esc close
+    document.addEventListener('keydown', function(e) {
+      var lbEl = document.getElementById('lightbox');
+      if (!lbEl || !lbEl.classList.contains('is-open')) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeLightbox();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navLightbox(-1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navLightbox(1);
+      }
+    });
+  }
+
+  function openLightbox(gallery, startIndex) {
+    if (!gallery || !gallery.length) return;
+    ensureLightboxDOM();
+    lightboxState.gallery = gallery;
+    lightboxState.index = startIndex || 0;
+    updateLightbox();
+    document.getElementById('lightbox').classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    var lb = document.getElementById('lightbox');
+    if (lb) lb.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  function navLightbox(delta) {
+    var g = lightboxState.gallery;
+    if (!g.length) return;
+    lightboxState.index = (lightboxState.index + delta + g.length) % g.length;
+    updateLightbox();
+  }
+
+  function updateLightbox() {
+    var lb = document.getElementById('lightbox');
+    if (!lb) return;
+    var g = lightboxState.gallery;
+    var i = lightboxState.index;
+    var img = lb.querySelector('.lightbox__img');
+    // Quick fade for image swap
+    img.style.opacity = '0';
+    setTimeout(function() {
+      img.src = g[i].image;
+      img.alt = g[i].name || '';
+      img.style.opacity = '1';
+    }, 60);
+    lb.querySelector('.lightbox__indicator').textContent = (i + 1) + ' / ' + g.length;
+  }
 
   /* --- Drag-to-scroll for horizontal galleries --- */
   let dragActive = false;

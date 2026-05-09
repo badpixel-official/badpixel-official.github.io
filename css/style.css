@@ -945,6 +945,230 @@ body.cursor-active .side-nav__btn { cursor: pointer; }
   font-weight: 400;
 }
 
+/* Product section — make scrollable on desktop too (grid/editorial content > viewport height) */
+.section[data-index="3"] {
+  overflow-y: auto;
+  align-items: flex-start;
+  padding-top: clamp(40px, 6vh, 80px);
+  padding-bottom: clamp(20px, 4vh, 40px);
+}
+.section[data-index="3"] .section__center {
+  padding-top: 0;
+}
+/* Custom scrollbar for Product section */
+.section[data-index="3"]::-webkit-scrollbar {
+  width: 4px;
+}
+.section[data-index="3"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+.section[data-index="3"]::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 2px;
+}
+
+/* ================================================
+   Product — Grid layout (replaces carousel for Product tab)
+   ================================================ */
+.product__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 1.5vw, 16px);
+  padding: 8px 0 16px;
+}
+
+.product__grid .product__slide,
+.product__editorial .product__slide,
+.editorial__hero {
+  flex: unset;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 6px;
+  position: relative;
+}
+
+.product__grid .product__slide,
+.product__editorial .product__slide {
+  aspect-ratio: 1;
+}
+
+.editorial__hero {
+  aspect-ratio: 4/5;
+}
+
+.product__grid .product__slide img,
+.product__editorial .product__slide img,
+.editorial__hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--gray-100);
+  display: block;
+  transition: transform 0.5s var(--ease), opacity 0.3s var(--ease);
+  border-radius: 0;
+}
+
+.product__grid .product__slide:hover img,
+.product__editorial .product__slide:hover img,
+.editorial__hero:hover img {
+  transform: scale(1.05);
+}
+
+/* ================================================
+   Data Vault — Editorial spread
+   ================================================ */
+.product__editorial {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: clamp(10px, 1.5vw, 16px);
+  padding: 8px 0 16px;
+}
+
+.editorial__hero {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.editorial__side {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: clamp(10px, 1.5vw, 16px);
+}
+
+.editorial__below {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(10px, 1.5vw, 16px);
+}
+
+/* Mobile: collapse to single column */
+@media (max-width: 768px) {
+  .product__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .product__editorial {
+    display: block;
+  }
+  .editorial__hero,
+  .editorial__side,
+  .editorial__below {
+    display: block;
+    margin-bottom: clamp(10px, 1.5vw, 16px);
+  }
+  .editorial__side .product__slide,
+  .editorial__below .product__slide {
+    margin-bottom: clamp(10px, 1.5vw, 16px);
+  }
+}
+
+/* ================================================
+   Lightbox — full-screen image viewer
+   ================================================ */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.lightbox.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lightbox__img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  transition: opacity 0.12s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.lightbox__btn {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+  font-family: inherit;
+}
+
+.lightbox__btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.05);
+}
+
+.lightbox__btn--prev {
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.lightbox__btn--prev:hover {
+  transform: translateY(-50%) scale(1.05);
+}
+
+.lightbox__btn--next {
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.lightbox__btn--next:hover {
+  transform: translateY(-50%) scale(1.05);
+}
+
+.lightbox__btn--close {
+  top: 24px;
+  right: 24px;
+  font-size: 22px;
+}
+
+.lightbox__indicator {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .lightbox__btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  .lightbox__btn--prev { left: 8px; }
+  .lightbox__btn--next { right: 8px; }
+  .lightbox__btn--close { top: 12px; right: 12px; }
+  .lightbox__indicator {
+    bottom: 12px;
+    right: 12px;
+    font-size: 11px;
+  }
+}
+
 /* ================================================
    BI (Section 4)
    ================================================ */
