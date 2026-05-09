@@ -1232,6 +1232,16 @@ body.cursor-active .side-nav__btn { cursor: pointer; }
   color: var(--gray-300);
 }
 
+/* INTRO 섹션 변형 — SCROLL 힌트 바로 위쪽 중앙 배치 */
+.footer__links--intro {
+  position: absolute;
+  bottom: 130px; /* scroll-hint(bottom:40px, ~66px 높이) 위 + 24px 여백 */
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0;
+  z-index: 5;
+}
+
 .footer__copy {
   font-size: 0.7rem;
   color: var(--gray-500);
