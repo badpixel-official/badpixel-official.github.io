@@ -288,7 +288,7 @@
   });
 
   /* --- Product section: JSON-driven rendering --- */
-  fetch('collections.json')
+  fetch('collections.json?v=2')
     .then(r => r.json())
     .then(data => {
       const tabsEl = document.getElementById('productTabs');
@@ -350,7 +350,7 @@
           col.products.forEach(function(p) {
             var card = document.createElement('div');
             card.className = 'product__slide';
-            card.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy"><p>' + p.name + '</p>';
+            card.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy">';
             pvTrack.appendChild(card);
           });
           pvContent.appendChild(pvTrack);
@@ -366,7 +366,7 @@
             col.lookbook.forEach(function(p) {
               var card = document.createElement('div');
               card.className = 'product__slide';
-              card.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy"><p>' + p.name + '</p>';
+              card.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy">';
               dvTrack.appendChild(card);
             });
             dvContent.appendChild(dvTrack);

@@ -7,21 +7,33 @@
       "concept": "아이웨어 자체가 키링이 된다면?",
       "soon": false,
       "products": [
-        { "name": "BIKA", "image": "assets/images/product/q1/BIKA-01_2.png" },
-        { "name": "BIKA", "image": "assets/images/product/q1/BIKA-02_2.png" },
-        { "name": "BIKO", "image": "assets/images/product/q1/BIKO-01_2.png" },
-        { "name": "GAZEL", "image": "assets/images/product/q1/GAZEL-01_2.png" },
-        { "name": "GAZEL", "image": "assets/images/product/q1/GAZEL-02_2.png" },
-        { "name": "NER", "image": "assets/images/product/q1/NER-01_2.png" },
-        { "name": "NER", "image": "assets/images/product/q1/NER-02_2.png" },
-        { "name": "SMITH", "image": "assets/images/product/q1/SMITH-01_2.png" },
-        { "name": "TULA", "image": "assets/images/product/q1/TULA-01_2.png" },
-        { "name": "TULA", "image": "assets/images/product/q1/TULA-02_2.png" }
+        { "name": "BIKA", "image": "assets/images/product/q1/비카 클리어.png" },
+        { "name": "BIKA", "image": "assets/images/product/q1/비카 블루.png" },
+        { "name": "BIKO", "image": "assets/images/product/q1/비코 클리어.png" },
+        { "name": "GAZEL", "image": "assets/images/product/q1/가젤 클리어.png" },
+        { "name": "GAZEL", "image": "assets/images/product/q1/가젤 브라운.png" },
+        { "name": "NER", "image": "assets/images/product/q1/널 그레이.png" },
+        { "name": "NER", "image": "assets/images/product/q1/널 옐로우.png" },
+        { "name": "SMITH", "image": "assets/images/product/q1/스미스 클리어.png" },
+        { "name": "TULA", "image": "assets/images/product/q1/툴라 클리어.png" },
+        { "name": "TULA", "image": "assets/images/product/q1/툴라 그린.png" }
       ],
       "lookbook": [
-        { "name": "HANG ON 01", "image": "assets/images/data vault/hang on_1.png" },
-        { "name": "HANG ON 02", "image": "assets/images/data vault/hang on_2.png" },
-        { "name": "HANG ON 03", "image": "assets/images/data vault/hang on_3.png" }
+        { "name": "DATA VAULT 01", "image": "assets/images/data vault/1.png" },
+        { "name": "DATA VAULT 02", "image": "assets/images/data vault/2.png" },
+        { "name": "DATA VAULT 03", "image": "assets/images/data vault/3.png" },
+        { "name": "DATA VAULT 04", "image": "assets/images/data vault/4.png" },
+        { "name": "DATA VAULT 05", "image": "assets/images/data vault/5.webp" },
+        { "name": "DATA VAULT 06", "image": "assets/images/data vault/6.webp" },
+        { "name": "DATA VAULT 07", "image": "assets/images/data vault/7.webp" },
+        { "name": "DATA VAULT 08", "image": "assets/images/data vault/8.png" },
+        { "name": "DATA VAULT 09", "image": "assets/images/data vault/9.png" },
+        { "name": "DATA VAULT 10", "image": "assets/images/data vault/10.png" },
+        { "name": "DATA VAULT 11", "image": "assets/images/data vault/11.png" },
+        { "name": "DATA VAULT 12", "image": "assets/images/data vault/12.jpg" },
+        { "name": "DATA VAULT 13", "image": "assets/images/data vault/13.jpg" },
+        { "name": "DATA VAULT 14", "image": "assets/images/data vault/14.jpg" },
+        { "name": "DATA VAULT 15", "image": "assets/images/data vault/15.jpg" }
       ]
     },
     {
