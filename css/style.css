@@ -1366,11 +1366,11 @@ body.is-transitioning .tv-effect--scanbar {
     letter-spacing: 0.03em;
   }
 
-  /* Product section — scrollable on mobile */
+  /* Product section — mobile-specific padding only
+     overflow-y:auto + align-items:flex-start 는 데스크탑 규칙(line 949)에서 cascade.
+     align-items:center 는 콘텐츠가 viewport보다 길 때 위쪽으로 밀어내 pill을 못 보이게 함 — 절대 금지. */
   .section[data-index="3"] {
-    overflow-y: auto;
-    align-items: center;
-    padding: 50px 0 0;
+    padding: 50px 0 16px;
   }
   .section[data-index="3"] .section__center {
     padding-top: 0;
